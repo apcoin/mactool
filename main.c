@@ -1,4 +1,8 @@
+#include <stdio.h>
+#include <string.h>
+
 #include "arp_get.h"
+
 void usage() {
 	printf("\n");
 }
