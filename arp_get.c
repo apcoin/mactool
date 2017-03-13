@@ -11,6 +11,10 @@
 
 #include "arp_get.h"
 
+int mac_2_vendor(const char *i_mac, char *o_vender) {
+	return 0;
+}
+
 int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac) {
 	int s;
     struct arpreq arpreq;
