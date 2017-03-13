@@ -9,6 +9,9 @@
 #define ATF_USETRAILERS 0x10    /* has requested trailers */
 #define ATF_PROXY   0x20    /* Do PROXY arp */
 
+#define MAC_LENGTH  18
+#define IP_LENGTH   16
+
 
 int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac);
 int arp_get_ip(const char *dev_name, const char *i_mac, char *o_ip);
