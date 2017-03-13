@@ -37,7 +37,7 @@ int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac) {
 	
 	if (arpreq.arp_flags & ATF_COM) {
         unsigned char *eap = (unsigned char *) &arpreq.arp_ha.sa_data[0];
-        sscanf(o_mac, "%02X:%02X:%02X:%02X:%02X:%02X",
+        snprintf(o_mac, MAC_LENGTH, "%02X:%02X:%02X:%02X:%02X:%02X",
                 eap[0], eap[1], eap[2], eap[3], eap[4], eap[5]);
         return 1;
     } 
