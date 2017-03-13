@@ -45,4 +45,5 @@ int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac) {
 }
 
 int arp_get_ip(const char *dev_name, const char *i_mac, char *o_ip) {
+    return 0;
 }
