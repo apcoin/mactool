@@ -10,7 +10,7 @@
 #define ATF_PROXY   0x20    /* Do PROXY arp */
 
 
-int arp_get_mac(const char *i_ip, char *o_mac);
-int arp_get_ip(const char *i_mac, char *o_ip);
+int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac);
+int arp_get_ip(const char *dev_name, const char *i_mac, char *o_ip);
 
 #endif
