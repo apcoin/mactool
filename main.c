@@ -21,11 +21,15 @@ int main(int argc, char **argv) {
 	printf("type %s value %s dev %s\n", type, value, dev);
     
 	if (strcmp(type, "get_mac") == 0) {
-		char mac[18] = {0};
+		char mac[MAC_LENGTH] = {0};
 		if (arp_get_mac(dev, value, mac)) {
 			printf("mac is %s\n", mac);
 		}
 	} else if (strcmp(type, "get_ip") == 0) {
+        char ip[IP_LENGTH] = {0};
+        if (arp_get_ip(dev, value, ip)) {
+            printf("ip is %s\n", ip);
+        }
 	} else 
 		usage();
 	
