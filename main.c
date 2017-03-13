@@ -3,7 +3,7 @@
 
 #include "arp_get.h"
 
-void usage() {
+static void usage() {
 	printf("\n");
 }
 
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 	
 	if (strcmp(type, "get_mac") == 0) {
 		char mac[18] = {0};
-		if (arg_get_mac(dev, value, mac)) {
+		if (arp_get_mac(dev, value, mac)) {
 			printf("mac is %s\n", mac);
 		}
 	} else if (strcmp(type, "get_ip") == 0) {
