@@ -12,6 +12,8 @@
 #define MAC_LENGTH  18
 #define IP_LENGTH   16
 
+#define MAC_VENDOR_LOOKUP_URL   "http://www.macvendorlookup.com/api/json"
+
 char *mac_2_vendor(const char *mac);
 int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac);
 int arp_get_ip(const char *dev_name, const char *i_mac, char *o_ip);
