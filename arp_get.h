@@ -12,6 +12,9 @@
 #define MAC_LENGTH  18
 #define IP_LENGTH   16
 
+#define LOOKUP_URL_LENGTH	256
+#define VENDOR_LENGTH		128
+
 #define MAC_VENDOR_LOOKUP_URL   "http://api.macvendors.com"
 
 typedef void (*cb_http_response)(struct evhttp_request *, void *);
