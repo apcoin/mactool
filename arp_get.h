@@ -1,4 +1,4 @@
-#ifdef	_ARP_GET_
+#ifndef	_ARP_GET_
 #define	_ARP_GET_
 
 /*  arp_flags and at_flags field values */
