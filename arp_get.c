@@ -22,6 +22,8 @@
 
 #include "arp_get.h"
 
+const char *MAC_VENDOR_LOOKUP_URL =  "http://api.macvendors.com";
+
 static int get_mac_vendor_url(const char *mac, char *o_url, int length) {
 	if (!mac || !o_url)
 		return 0;
