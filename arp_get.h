@@ -15,6 +15,7 @@
 #define LOOKUP_URL_LENGTH	256
 #define VENDOR_LENGTH		128
 
+struct evhttp_request;
 
 typedef void (*cb_http_response)(struct evhttp_request *, void *);
 

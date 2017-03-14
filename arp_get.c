@@ -52,11 +52,10 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 	if (evhttp_request_get_response_code(req) != 200)
 		return;
 	
-	struct s_vender *vendor = ctx;
+	struct s_vendor *vendor = (struct s_vendor *)ctx;
 	
 	if ((nread = evbuffer_remove(evhttp_request_get_input_buffer(req),
-		    buffer, sizeof(buffer)-1))
-	       > 0) {
+		    buffer, sizeof(buffer)-1)) > 0) {
 		vendor->vlen = nread;
 		vendor->data = strdup(buffer);
 	}
@@ -72,7 +71,10 @@ int get_mac_vendor(const char *mac) {
 	make_http_get_request(lookup_url, mac_2_vendor, vendor);
 	if (vendor->vlen > 0) {
 		printf("vendor is %s\n", vendor->data);
+		free(vendor->data);
 	}
+	free(vendor);
+	return 1;
 }
 
 void make_http_get_request(const char *url,  cb_http_response callback, void *baton) {
@@ -91,7 +93,6 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
 	struct evhttp_connection *evcon = NULL;
 	struct evhttp_request *req = NULL;
 	struct evkeyvalq *output_headers = NULL;
-	struct evbuffer *output_buffer = NULL;
 
 	int r = 0;
 	enum { HTTP, HTTPS } type = HTTP;
@@ -99,7 +100,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     http_uri = evhttp_uri_parse(url);
 	if (http_uri == NULL) {
 		err("malformed url");
-		goto error;
+		goto cleanup;
 	}
 
 	scheme = evhttp_uri_get_scheme(http_uri);
@@ -131,27 +132,27 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     r = RAND_poll();
 	if (r == 0) {
 		err_openssl("RAND_poll");
-		goto error;
+		goto cleanup;
 	}
 
 	/* Create a new OpenSSL context */
 	ssl_ctx = SSL_CTX_new(SSLv23_method());
 	if (!ssl_ctx) {
 		err_openssl("SSL_CTX_new");
-		goto error;
+		goto cleanup;
 	}
     
     base = event_base_new();
 	if (!base) {
 		perror("event_base_new()");
-		goto error;
+		goto cleanup;
 	}
 
 	// Create OpenSSL bufferevent and stack evhttp on top of it
 	ssl = SSL_new(ssl_ctx);
 	if (ssl == NULL) {
 		err_openssl("SSL_new()");
-		goto error;
+		goto cleanup;
 	}
     
     if (strcasecmp(scheme, "http") == 0) {
@@ -165,7 +166,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     
     if (bev == NULL) {
 		fprintf(stderr, "bufferevent_openssl_socket_new() failed\n");
-		goto error;
+		goto cleanup;
 	}
 
 	bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
@@ -174,7 +175,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
 		host, port);
 	if (evcon == NULL) {
 		fprintf(stderr, "evhttp_connection_base_bufferevent_new() failed\n");
-		goto error;
+		goto cleanup;
 	}
     
     evhttp_connection_set_timeout(evcon, 1);
@@ -182,7 +183,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     req = evhttp_request_new(callback, baton);
 	if (req == NULL) {
 		fprintf(stderr, "evhttp_request_new() failed\n");
-		goto error;
+		goto cleanup;
 	}
 
 	output_headers = evhttp_request_get_output_headers(req);
@@ -193,14 +194,11 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     r = evhttp_make_request(evcon, req, EVHTTP_REQ_GET, uri);
 	if (r != 0) {
 		fprintf(stderr, "evhttp_make_request() failed\n");
-		goto error;
+		goto cleanup;
 	}
 
 	event_base_dispatch(base);
-	goto cleanup;
 
-error:
-	r = 1;
 cleanup:
 	if (evcon)
 		evhttp_connection_free(evcon);
@@ -226,7 +224,6 @@ cleanup:
 
 	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 #endif /* (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER) */
-	return r;
 }
 
 int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac) {
