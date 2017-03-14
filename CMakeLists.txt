@@ -4,7 +4,6 @@ project(arp_get C)
 
 set(src_arp_get
     arp_get.c
-    http_client.c
     main.c)
     
 set(libs 
