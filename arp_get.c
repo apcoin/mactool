@@ -65,20 +65,20 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 	}
 }
 
-int get_mac_vendor(const char *mac) {
+struct s_vendor *get_mac_vendor(const char *mac) {
 	char lookup_url[LOOKUP_URL_LENGTH] = {0};
 	if (!get_mac_vendor_url(mac, lookup_url, LOOKUP_URL_LENGTH))
-		return 0;
+		return NULL;
 	
 	struct s_vendor *vendor = malloc(sizeof(struct s_vendor));
 	memset(vendor, 0, sizeof(struct s_vendor));
 	make_http_get_request(lookup_url, mac_2_vendor, vendor);
 	if (vendor->vlen > 0) {
 		DEBUG_PRINT("vendor is %s\n", vendor->data);
-		free(vendor->data);
+		return vendor;
 	}
 	free(vendor);
-	return 1;
+	return NULL;
 }
 
 void make_http_get_request(const char *url,  cb_http_response callback, void *baton) {
