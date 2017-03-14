@@ -42,42 +42,23 @@ static void err_openssl(const char *func) {
 }
 
 static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
-	char buffer[256];
+	char buffer[256] = {0};
 	int nread;
 	
 	if (req == NULL) {
-		/* If req is NULL, it means an error occurred, but
-		 * sadly we are mostly left guessing what the error
-		 * might have been.  We'll do our best... */
-		struct bufferevent *bev = (struct bufferevent *) ctx;
-		unsigned long oslerr;
-		int printed_err = 0;
-		int errcode = EVUTIL_SOCKET_ERROR();
-		fprintf(stderr, "some request failed - no idea which one though!\n");
-		/* Print out the OpenSSL error queue that libevent
-		 * squirreled away for us, if any. */
-		while ((oslerr = bufferevent_get_openssl_error(bev))) {
-			ERR_error_string_n(oslerr, buffer, sizeof(buffer));
-			fprintf(stderr, "%s\n", buffer);
-			printed_err = 1;
-		}
-		
-		if (! printed_err)
-			fprintf(stderr, "socket error = %s (%d)\n",
-				evutil_socket_error_to_string(errcode),
-				errcode);
 		return;
 	}
-
+	
+	if (evhttp_request_get_response_code(req) != 200)
+		return;
+	
 	struct s_vender *vendor = ctx;
-	fprintf(stderr, "Response line: %d %s\n",
-	    evhttp_request_get_response_code(req),
-	    evhttp_request_get_response_code_line(req));
-
-	while ((nread = evbuffer_remove(evhttp_request_get_input_buffer(req),
-		    buffer, sizeof(buffer)))
+	
+	if ((nread = evbuffer_remove(evhttp_request_get_input_buffer(req),
+		    buffer, sizeof(buffer)-1))
 	       > 0) {
-		fwrite(buffer, nread, 1, stdout);
+		vendor->vlen = nread;
+		vendor->data = strdup(buffer);
 	}
 }
 
@@ -89,6 +70,9 @@ int get_mac_vendor(const char *mac) {
 	struct s_vendor *vendor = malloc(sizeof(struct s_vendor));
 	memset(vendor, 0, sizeof(struct s_vendor));
 	make_http_get_request(lookup_url, mac_2_vendor, vendor);
+	if (vendor->vlen > 0) {
+		printf("vendor is %s\n", vendor->data);
+	}
 }
 
 void make_http_get_request(const char *url,  cb_http_response callback, void *baton) {
