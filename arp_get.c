@@ -31,9 +31,53 @@ static int get_mac_vendor_url(const char *mac, char *o_url, int length) {
 	return nret<0?0:1;
 }
 
-static void mac_2_vendor(struct http_client *api, struct http_request *req, struct http_response *response, void *baton) {
-	struct s_vendor *vendor = (struct s_vendor *)baton;
-	printf("%.*s", response->body_len, response->body);
+static void err(const char *msg) {
+	fputs(msg, stderr);
+}
+
+static void err_openssl(const char *func) {
+	fprintf (stderr, "%s failed:\n", func);
+	ERR_print_errors_fp (stderr);
+}
+
+static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
+	char buffer[256];
+	int nread;
+	
+	if (req == NULL) {
+		/* If req is NULL, it means an error occurred, but
+		 * sadly we are mostly left guessing what the error
+		 * might have been.  We'll do our best... */
+		struct bufferevent *bev = (struct bufferevent *) ctx;
+		unsigned long oslerr;
+		int printed_err = 0;
+		int errcode = EVUTIL_SOCKET_ERROR();
+		fprintf(stderr, "some request failed - no idea which one though!\n");
+		/* Print out the OpenSSL error queue that libevent
+		 * squirreled away for us, if any. */
+		while ((oslerr = bufferevent_get_openssl_error(bev))) {
+			ERR_error_string_n(oslerr, buffer, sizeof(buffer));
+			fprintf(stderr, "%s\n", buffer);
+			printed_err = 1;
+		}
+		
+		if (! printed_err)
+			fprintf(stderr, "socket error = %s (%d)\n",
+				evutil_socket_error_to_string(errcode),
+				errcode);
+		return;
+	}
+
+	struct s_vender *vendor = ctx;
+	fprintf(stderr, "Response line: %d %s\n",
+	    evhttp_request_get_response_code(req),
+	    evhttp_request_get_response_code_line(req));
+
+	while ((nread = evbuffer_remove(evhttp_request_get_input_buffer(req),
+		    buffer, sizeof(buffer)))
+	       > 0) {
+		fwrite(buffer, nread, 1, stdout);
+	}
 }
 
 #define LOOKUP_URL_LENGTH	256
@@ -51,20 +95,23 @@ int get_mac_vendor(const char *mac) {
 
 void make_http_get_request(const char *url,  cb_http_response callback, void *baton) {
     struct evhttp_uri *http_uri = NULL;
-	const char *scheme, *host, *path, *query;
-	char uri[LOOKUP_URL_LENGTH];
+	const char 	*scheme = NULL, 
+				*host = NULL, 
+				*path = NULL, 
+				*query = NULL;
+	char uri[LOOKUP_URL_LENGTH] = {0};
 	int port;
 
 	SSL_CTX *ssl_ctx = NULL;
 	SSL *ssl = NULL;
-	struct bufferevent *bev;
+	struct event_base *base = NULL;
+	struct bufferevent *bev = NULL;
 	struct evhttp_connection *evcon = NULL;
-	struct evhttp_request *req;
-	struct evkeyvalq *output_headers;
-	struct evbuffer *output_buffer;
+	struct evhttp_request *req = NULL;
+	struct evkeyvalq *output_headers = NULL;
+	struct evbuffer *output_buffer = NULL;
 
-	int i;
-	int ret = 0;
+	int r = 0;
 	enum { HTTP, HTTPS } type = HTTP;
     
     http_uri = evhttp_uri_parse(url);
@@ -141,8 +188,6 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
 
 	bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
 
-	// For simplicity, we let DNS resolution block. Everything else should be
-	// asynchronous though.
 	evcon = evhttp_connection_base_bufferevent_new(base, NULL, bev,
 		host, port);
 	if (evcon == NULL) {
@@ -152,7 +197,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     
     evhttp_connection_set_timeout(evcon, 1);
     
-    req = evhttp_request_new(http_request_done, bev);
+    req = evhttp_request_new(callback, baton);
 	if (req == NULL) {
 		fprintf(stderr, "evhttp_request_new() failed\n");
 		goto error;
@@ -160,9 +205,10 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
 
 	output_headers = evhttp_request_get_output_headers(req);
 	evhttp_add_header(output_headers, "Host", host);
+	evhttp_add_header(output_headers, "User-Agent", "ApFree");
 	evhttp_add_header(output_headers, "Connection", "close");
     
-    r = evhttp_make_request(evcon, req, data_file ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri);
+    r = evhttp_make_request(evcon, req, EVHTTP_REQ_GET, uri);
 	if (r != 0) {
 		fprintf(stderr, "evhttp_make_request() failed\n");
 		goto error;
@@ -172,7 +218,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
 	goto cleanup;
 
 error:
-	ret = 1;
+	r = 1;
 cleanup:
 	if (evcon)
 		evhttp_connection_free(evcon);
@@ -198,6 +244,7 @@ cleanup:
 
 	sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 #endif /* (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER) */
+	return r;
 }
 
 int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac) {
