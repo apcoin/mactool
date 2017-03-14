@@ -19,10 +19,10 @@ const char *MAC_VENDOR_LOOKUP_URL =  "http://api.macvendors.com";
 
 typedef void (*cb_http_response)(struct evhttp_request *, void *);
 
-struct {
+struct s_vendor {
 	char *vendor;
 	int	  vlen;
-} s_vendor;
+};
 
 void make_http_get_request(const char *url,  cb_http_response callback, void *baton);
 
