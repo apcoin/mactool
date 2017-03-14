@@ -46,11 +46,14 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 	int nread;
 	
 	if (req == NULL) {
+		printf("req is NULL\n");
 		return;
 	}
 	
-	if (evhttp_request_get_response_code(req) != 200)
+	if (evhttp_request_get_response_code(req) != 200) {
+		printf("response is not OK\n");
 		return;
+	}
 	
 	struct s_vendor *vendor = (struct s_vendor *)ctx;
 	
@@ -58,6 +61,7 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 		    buffer, sizeof(buffer)-1)) > 0) {
 		vendor->vlen = nread;
 		vendor->data = strdup(buffer);
+		printf("response is %s\n", vendor->data);
 	}
 }
 

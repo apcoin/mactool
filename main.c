@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -24,7 +25,8 @@ int main(int argc, char **argv) {
 		char mac[MAC_LENGTH] = {0};
 		if (arp_get_mac(dev, value, mac)) {
 			printf("mac is %s\n", mac);
-		}
+		} else 
+			printf("error %s\n", strerror(errno));
 	} else if (strcmp(type, "ip") == 0) {
         char ip[IP_LENGTH] = {0};
         if (arp_get_ip(dev, value, ip)) {
