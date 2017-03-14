@@ -14,6 +14,8 @@
 
 #define MAC_VENDOR_LOOKUP_URL   "http://api.macvendors.com"
 
+typedef void (*cb_http_response)(struct evhttp_request *, void *);
+
 struct {
 	char *vendor;
 	int	  vlen;
