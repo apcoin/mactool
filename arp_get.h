@@ -33,7 +33,7 @@ struct s_vendor {
 
 void make_http_get_request(const char *url,  cb_http_response callback, void *baton);
 
-int get_mac_vendor(const char *mac);
+struct s_vendor *get_mac_vendor(const char *mac);
 
 int arp_get_mac(const char *dev_name, const char *i_ip, char *o_mac);
 int arp_get_ip(const char *dev_name, const char *i_mac, char *o_ip);
