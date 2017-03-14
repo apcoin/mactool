@@ -19,7 +19,7 @@
 typedef void (*cb_http_response)(struct evhttp_request *, void *);
 
 struct s_vendor {
-	char *vendor;
+	char *data;
 	int	  vlen;
 };
 
