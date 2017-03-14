@@ -79,12 +79,9 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 	}
 }
 
-#define LOOKUP_URL_LENGTH	256
-#define VENDOR_LENGTH		128
-
 int get_mac_vendor(const char *mac) {
 	char lookup_url[LOOKUP_URL_LENGTH] = {0};
-	if (!get_mac_vendor_url(mac, lookup_url, LOOKUP_URL_LENGHT))
+	if (!get_mac_vendor_url(mac, lookup_url, LOOKUP_URL_LENGTH))
 		return 0;
 	
 	struct s_vendor *vendor = malloc(sizeof(struct s_vendor));
