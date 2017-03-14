@@ -21,7 +21,6 @@
 #include <openssl/rand.h>
 
 #include "arp_get.h"
-#include "http_client.h"
 
 static int get_mac_vendor_url(const char *mac, char *o_url, int length) {
 	if (!mac || !o_url)
