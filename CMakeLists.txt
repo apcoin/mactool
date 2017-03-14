@@ -8,8 +8,10 @@ set(src_arp_get
     main.c)
     
 set(libs 
-    json-c
-    event)
+    ssl
+	crypto
+    event
+    event_openssl)
     
 ADD_DEFINITIONS(-O2 -Wall --std=gnu99 -Wmissing-declarations)
 
