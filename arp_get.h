@@ -15,6 +15,13 @@
 #define LOOKUP_URL_LENGTH	256
 #define VENDOR_LENGTH		128
 
+#define DEBUG
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, args...)    fprintf(stderr, fmt, ## args)
+#else
+#define DEBUG_PRINT(fmt, args...)    /* Don't do anything in release builds */
+#endif
+
 struct evhttp_request;
 
 typedef void (*cb_http_response)(struct evhttp_request *, void *);
