@@ -51,7 +51,7 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 	}
 	
 	if (evhttp_request_get_response_code(req) != 200) {
-		DEBUG_PRINT("response is not OK\n");
+		DEBUG_PRINT("response is [%d]\n", evhttp_request_get_response_code(req));
 		return;
 	}
 	
