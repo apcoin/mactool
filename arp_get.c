@@ -33,11 +33,11 @@ static int get_mac_vendor_url(const char *mac, char *o_url, int length) {
 }
 
 static void err(const char *msg) {
-	fputs(msg, stderr);
+	DEBUG_PRINT(msg);
 }
 
 static void err_openssl(const char *func) {
-	fprintf (stderr, "%s failed:\n", func);
+	DEBUG_PRINT ("%s failed:\n", func);
 	ERR_print_errors_fp (stderr);
 }
 
@@ -46,12 +46,12 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 	int nread;
 	
 	if (req == NULL) {
-		printf("req is NULL\n");
+		DEBUG_PRINT("req is NULL\n");
 		return;
 	}
 	
 	if (evhttp_request_get_response_code(req) != 200) {
-		printf("response is not OK\n");
+		DEBUG_PRINT("response is not OK\n");
 		return;
 	}
 	
@@ -61,7 +61,7 @@ static void mac_2_vendor(struct evhttp_request *req, void *ctx) {
 		    buffer, sizeof(buffer)-1)) > 0) {
 		vendor->vlen = nread;
 		vendor->data = strdup(buffer);
-		printf("response is %s\n", vendor->data);
+		DEBUG_PRINT("response is %s\n", vendor->data);
 	}
 }
 
@@ -74,7 +74,7 @@ int get_mac_vendor(const char *mac) {
 	memset(vendor, 0, sizeof(struct s_vendor));
 	make_http_get_request(lookup_url, mac_2_vendor, vendor);
 	if (vendor->vlen > 0) {
-		printf("vendor is %s\n", vendor->data);
+		DEBUG_PRINT("vendor is %s\n", vendor->data);
 		free(vendor->data);
 	}
 	free(vendor);
@@ -148,7 +148,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     
     base = event_base_new();
 	if (!base) {
-		perror("event_base_new()");
+		DEBUG_PRINT("event_base_new()");
 		goto cleanup;
 	}
 
@@ -169,7 +169,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
 	}
     
     if (bev == NULL) {
-		fprintf(stderr, "bufferevent_openssl_socket_new() failed\n");
+		DEBUG_PRINT("bufferevent_openssl_socket_new() failed\n");
 		goto cleanup;
 	}
 
@@ -178,7 +178,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
 	evcon = evhttp_connection_base_bufferevent_new(base, NULL, bev,
 		host, port);
 	if (evcon == NULL) {
-		fprintf(stderr, "evhttp_connection_base_bufferevent_new() failed\n");
+		DEBUG_PRINT("evhttp_connection_base_bufferevent_new() failed\n");
 		goto cleanup;
 	}
     
@@ -186,7 +186,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     
     req = evhttp_request_new(callback, baton);
 	if (req == NULL) {
-		fprintf(stderr, "evhttp_request_new() failed\n");
+		DEBUG_PRINT("evhttp_request_new() failed\n");
 		goto cleanup;
 	}
 
@@ -197,7 +197,7 @@ void make_http_get_request(const char *url,  cb_http_response callback, void *ba
     
     r = evhttp_make_request(evcon, req, EVHTTP_REQ_GET, uri);
 	if (r != 0) {
-		fprintf(stderr, "evhttp_make_request() failed\n");
+		DEBUG_PRINT("evhttp_make_request() failed\n");
 		goto cleanup;
 	}
 
